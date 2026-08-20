@@ -138,7 +138,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  ProductDetailScreen(product: product),
+                                  ProductDetailsScreen(product: product),
                             ),
                           );
                         },
