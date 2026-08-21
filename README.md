@@ -4,10 +4,10 @@
  
 A Flutter project that focuses on advance topics. Covering the Mobile to web transactions.
  
-## Lab Activity 3: discussion
+## Lab Activity 4: discussion
 
-The Cart Model is responsible for converting the JSON data from the API into Cart and CartProduct objects. The Cart Service handles the cart endpoints and gets the needed cart information from the API, then returns the parsed data. The Cart Screen uses the service to get the cart information and displays the items that are currently added to the cart.
+The User Model stores the information of the user that is received from the API, while the UserService is responsible for handling the authentication and saving the user's information using SharedPreferences. The Profile Screen then gets the saved user information through the UserService and uses the User Model to display the user's details.
 
-To reach the same detail_screen.dart, the Cart Screen gets the ID from the cart item that was selected and uses getById from the ProductService to get the complete information of the product. After getting the Product object, it passes it to the same ProductDetailsScreen that is also used by the product listing. This allows the user to select an item from the cart and still access its product details.
+The updated design still follows the Model-Service-Screen pattern, where the Model handles the data, the Service manages the API requests and saved information, and the Screen is responsible for displaying the data to the user.
 
-The updated design still follows the Model-Service-Screen pattern, but the Cart Screen now uses two different services, which are CartService and ProductService. This shows how one screen can use multiple services to complete a feature and handle different types of data.
+The saved userId is also used to display the correct cart for the logged-in user. The Profile Screen gets the user's ID from the User Model and passes it to the CartService. The CartService then uses the ID to retrieve the cart information that belongs to that specific user and displays it on the Cart Screen.

@@ -3,7 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'product_screen.dart';
 import 'cart_screen.dart';
+import 'profile_screen.dart';
 
+import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,6 +19,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
+
+  String _userName = '';
+  final UserService _userService = UserService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = await _userService.getUser();
+
+    if (!mounted) return;
+
+    setState(() {
+      _userName = user.firstName;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   text: _selectedIndex == 1
                       ? 'Cart'
                       : _selectedIndex == 2
-                      ? 'Profile'
+                      ? _userName
                       : 'Home',
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
@@ -49,13 +70,36 @@ class _HomeScreenState extends State<HomeScreen> {
         body: PageView(
           physics: const NeverScrollableScrollPhysics(),
           controller: _pageController,
-          children: const <Widget>[ProductScreen(), CartScreen()],
+          children: const <Widget>[
+            ProductScreen(),
+            CartScreen(),
+            ProfileScreen(),
+          ],
           onPageChanged: (page) {
             setState(() {
               _selectedIndex = page;
             });
           },
         ),
+
+        // Enhancement 2:
+        // Chat is now a FloatingActionButton.
+        // It is hidden when the Cart screen is selected.
+        floatingActionButton: _selectedIndex == 1
+            ? null
+            : FloatingActionButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'TBA: Chat feature is not yet implemented.',
+                      ),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.chat),
+              ),
+
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
