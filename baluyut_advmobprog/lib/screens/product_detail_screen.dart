@@ -6,15 +6,20 @@ import '../models/product.dart';
 
 // services
 import '../services/cart_service.dart';
+import '../services/user_service.dart';
 
 // widgets
 import '../widgets/custom_text.dart';
 
-// Displays full details for a single product.
 class ProductDetailsScreen extends StatefulWidget {
   final Product product;
+  final bool showAddToCart;
 
-  const ProductDetailsScreen({super.key, required this.product});
+  const ProductDetailsScreen({
+    super.key,
+    required this.product,
+    this.showAddToCart = true,
+  });
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -22,20 +27,18 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   final CartService _cartService = CartService();
-
-  // No auth system yet, so this stands in for the logged in user.
-  final int _userId = 5;
+  final UserService _userService = UserService();
 
   bool _addingToCart = false;
 
-  // Sends the current product to the cart endpoint.
   Future<void> _addToCart() async {
     setState(() => _addingToCart = true);
 
     try {
-      await _cartService.addToCart(_userId, [
-        {'id': widget.product.id, 'quantity': 1},
-      ]);
+      final user = await _userService.getUser();
+      final userId = user.id != 0 ? user.id : 3;
+
+      await _cartService.addToCartProduct(userId, widget.product);
 
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -70,7 +73,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product thumbnail image.
               ClipRRect(
                 borderRadius: BorderRadius.circular(12.r),
                 child: Image.network(
@@ -82,8 +84,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ),
               SizedBox(height: 16.h),
-
-              // Title and brand.
               CustomText(
                 text: product.title,
                 fontSize: 22.sp,
@@ -95,8 +95,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: CustomText(text: product.brand, fontSize: 14.sp),
               ),
               SizedBox(height: 12.h),
-
-              // Price and discount.
               Row(
                 children: [
                   CustomText(
@@ -118,8 +116,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ],
               ),
               SizedBox(height: 8.h),
-
-              // Rating and stock.
               Row(
                 children: [
                   Icon(Icons.star, size: 16.sp, color: Colors.amber),
@@ -139,16 +135,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ],
               ),
               SizedBox(height: 16.h),
-
               _sectionTitle('Description'),
               CustomText(text: product.description, fontSize: 14.sp),
               SizedBox(height: 16.h),
-
               _sectionTitle('Category'),
               CustomText(text: product.category, fontSize: 14.sp),
               SizedBox(height: 16.h),
-
-              // Tags list.
               if (product.tags.isNotEmpty) ...[
                 _sectionTitle('Tags'),
                 Wrap(
@@ -164,7 +156,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
                 SizedBox(height: 16.h),
               ],
-
               _sectionTitle('Product Info'),
               _infoRow('SKU', product.sku),
               _infoRow('Weight', '${product.weight} g'),
@@ -178,18 +169,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               _infoRow('Availability', product.availabilityStatus),
               SizedBox(height: 16.h),
-
               _sectionTitle('Warranty & Shipping'),
               CustomText(text: product.warrantyInformation, fontSize: 14.sp),
               SizedBox(height: 4.h),
               CustomText(text: product.shippingInformation, fontSize: 14.sp),
               SizedBox(height: 16.h),
-
               _sectionTitle('Return Policy'),
               CustomText(text: product.returnPolicy, fontSize: 14.sp),
               SizedBox(height: 16.h),
-
-              // Reviews list.
               if (product.reviews.isNotEmpty) ...[
                 _sectionTitle('Reviews'),
                 ...product.reviews.map(
@@ -235,35 +222,37 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ),
       ),
-      // Add to cart button pinned to the bottom.
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(16.r),
-          child: SizedBox(
-            width: double.infinity,
-            height: 48.h,
-            child: ElevatedButton.icon(
-              onPressed: _addingToCart ? null : _addToCart,
-              icon: _addingToCart
-                  ? SizedBox(
-                      width: 16.w,
-                      height: 16.h,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add_shopping_cart),
-              label: CustomText(
-                text: _addingToCart ? 'Adding...' : 'Add to Cart',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
+      bottomNavigationBar: widget.showAddToCart
+          ? SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(16.r),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48.h,
+                  child: ElevatedButton.icon(
+                    onPressed: _addingToCart ? null : _addToCart,
+                    icon: _addingToCart
+                        ? SizedBox(
+                            width: 16.w,
+                            height: 16.h,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.add_shopping_cart),
+                    label: CustomText(
+                      text: _addingToCart ? 'Adding...' : 'Add to Cart',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-      ),
+            )
+          : null,
     );
   }
 
-  // Section header used throughout the details layout.
   Widget _sectionTitle(String title) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
@@ -275,7 +264,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // Label/value row for product info fields.
   Widget _infoRow(String label, String value) {
     return Padding(
       padding: EdgeInsets.only(bottom: 6.h),
